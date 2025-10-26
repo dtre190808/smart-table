@@ -1,18 +1,18 @@
-import './fonts/ys-display/fonts.css'
-import './style.css'
+import './fonts/ys-display/fonts.css';
+import './style.css';
 
-import {data as sourceData} from "./data/dataset_1.js";
+import { data as sourceData } from "./data/dataset_1.js";
 
-import {initData} from "./data.js";
-import {processFormData} from "./lib/utils.js";
+import { initData } from "./data.js";
+import { processFormData } from "./lib/utils.js";
 
-import {initTable} from "./components/table.js";
-import {initSorting} from "./components/sorting.js";
-import {initSearching} from "./components/searching.js";
-import {initFiltering} from "./components/filtering.js";
-import {initPagination} from "./components/pagination.js";
+import { initTable } from "./components/table.js";
+import { initSorting } from "./components/sorting.js";
+import { initSearching } from "./components/searching.js";
+import { initFiltering } from "./components/filtering.js";
+import { initPagination } from "./components/pagination.js";
 
-// Исходные данные используемые в render()
+
 const api = initData(sourceData);
 
 /**
@@ -21,8 +21,8 @@ const api = initData(sourceData);
  */
 function collectState() {
     const state = processFormData(new FormData(sampleTable.container));
-    const rowsPerPage = parseInt(state.rowsPerPage); 
-    const page = parseInt(state.page ?? 1); 
+    const rowsPerPage = parseInt(state.rowsPerPage);
+    const page = parseInt(state.page ?? 1);
 
     return {
         ...state,
@@ -36,8 +36,9 @@ function collectState() {
  * @param {HTMLButtonElement?} action
  */
 async function render(action) {
-    let state = collectState(); 
+    let state = collectState();
     let query = {};
+
     query = applySearching(query, state, action);
     query = applyFiltering(query, state, action);
     query = applySorting(query, state, action);
@@ -55,18 +56,18 @@ const sampleTable = initTable({
     after: ['pagination'],
 }, render);
 
-const applySearching = initSearching(sampleTable.search.elements);
+const applySearching = initSearching('search');
 
-const {applyFiltering, updateIndexes} = initFiltering(sampleTable.filter.elements); 
+const { applyFiltering, updateIndexes } = initFiltering(sampleTable.filter.elements);
 
-const applySorting = initSorting([ 
+const applySorting = initSorting([
     sampleTable.header.elements.sortByDate,
     sampleTable.header.elements.sortByTotal
-]); 
+]);
 
-const {applyPagination, updatePagination} = initPagination(
-    sampleTable.pagination.elements, 
-    (el, page, isCurrent) => { 
+const { applyPagination, updatePagination } = initPagination(
+    sampleTable.pagination.elements,
+    (el, page, isCurrent) => {
         const input = el.querySelector('input');
         const label = el.querySelector('span');
         input.value = page;
@@ -79,6 +80,21 @@ const {applyPagination, updatePagination} = initPagination(
 const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
 
+const resetAllButton = sampleTable.container.querySelector('[name="reset"]');
+if (resetAllButton) {
+    resetAllButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        render(resetAllButton); 
+    });
+}
+
+sampleTable.container.addEventListener('click', (e) => {
+    if (e.target.matches('[name="clear"]')) {
+        e.preventDefault();
+        render(e.target);
+    }
+});
+
 async function init() {
     const indexes = await api.getIndexes();
     updateIndexes(sampleTable.filter.elements, {
@@ -86,4 +102,4 @@ async function init() {
     });
 }
 
-init().then(render);
+init().then(() => render());
